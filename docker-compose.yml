@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  mcp-tools:
+    build: ./tools
+    container_name: mcp-tools
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./tools:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+
+  ai-worker:
+    build: ./ai-worker
+    container_name: ai-worker
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ai-worker:/app
+      - /app/node_modules
+
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - mcp-tools
+      - ai-worker
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
