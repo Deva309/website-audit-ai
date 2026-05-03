@@ -4,6 +4,7 @@ import { runSEOChecks } from "./modules/seo.js";
 import { runAccessibility } from "./modules/accessibility.js";
 import { runPerformance } from "./modules/performance.js";
 import { checkMediaAssets } from "./modules/assets.js";
+import { getPullRequestDiff } from "./modules/github/pr.js";
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
@@ -126,6 +127,25 @@ app.post("/audit/full", async (req, res) => {
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// Fetch GitHub Pull Request diff
+app.get("/github/pr-diff", async (req, res) => {
+  const { owner, repo, pr_no } = req.query;
+  if (!owner || !repo || !pr_no) {
+    return res
+      .status(400)
+      .json({ error: "owner, repo, and pr_no query params are required" });
+  }
+  if (!process.env.GITHUB_TOKEN) {
+    return res.status(500).json({ error: "GITHUB_TOKEN is not set" });
+  }
+  try {
+    const diff = await getPullRequestDiff({ owner, repo, pr_no });
+    res.type("text/plain").send(diff);
+  } catch (e) {
+    res.status(e.message.includes("GitHub API error") ? parseInt(e.message.split(": ")[1]) || 500 : 500).json({ error: e.message });
   }
 });
 
