@@ -131,12 +131,12 @@ app.post("/audit/full", async (req, res) => {
 });
 
 // Fetch GitHub Pull Request diff
-app.get("/github/pr-diff", async (req, res) => {
-  const { owner, repo, pr_no } = req.query;
+app.post("/github/pr-diff", async (req, res) => {
+  const { owner, repo, pr_no } = req.body || {};
   if (!owner || !repo || !pr_no) {
     return res
       .status(400)
-      .json({ error: "owner, repo, and pr_no query params are required" });
+      .json({ error: "owner, repo, and pr_no are required in request body" });
   }
   if (!process.env.GITHUB_TOKEN) {
     return res.status(500).json({ error: "GITHUB_TOKEN is not set" });
